@@ -13,7 +13,7 @@ disp(['Image dimensions: ', num2str(rows), ' rows, ', num2str(cols), ' columns, 
 imageGray = rgb2gray(A);
 colormap(gray(256))
 title("Grayscale Histogram");
-imtool(imageGray);
+% imtool(imageGray);
 
 % Performing Intensity slicing, we got ideas for implementation from the
 % following matlab forum: https://ww2.mathworks.cn/matlabcentral/fileexchange/48847-intensity-level-slicing
@@ -68,3 +68,35 @@ filtered_image_8x8 = convolution_filter(A, 8);
 figure;
 imshow(uint8(filtered_image_8x8));
 title("Averaging 8x8 filtered Image");
+
+% Question 3: Creating Sub-image
+rect = [27.510000000000000,1.945100000000000e+02,9.449800000000000e+02,1.559800000000000e+02]
+cropped_image = imcrop(A, rect);
+figure;
+imshow(uint8(cropped_image));
+title("Cropped Image")
+
+% Question 4: Creating a binary image from the sub-image
+
+% We modify the original segmentation function to allow for controllable
+% output
+
+function segment_mask_v2 = intensity_slicing_v2(original_image, lower_threshold, upper_threshold, low_output, high_output)
+    [rows, columns] = size(original_image);
+    segment_mask_v2 = zeros(rows, columns); % Initialize the segmentation mask
+    for i = 1:rows
+        for j = 1:columns
+            if (lower_threshold < original_image(i, j) && original_image(i, j) < upper_threshold)
+                segment_mask_v2(i, j) = high_output;
+            else
+                segment_mask_v2(i, j) = low_output;
+            end
+        end
+    end
+end
+
+imageGray_cropped = rgb2gray(cropped_image);
+segment_mask_v2 = intensity_slicing_v2(imageGray_cropped, 50, 100, 0, 1);
+figure;
+imshow(segment_mask_v2);
+title("Binary Cropped Image");
