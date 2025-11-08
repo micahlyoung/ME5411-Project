@@ -7,7 +7,7 @@ imds = imageDatastore(path, "IncludeSubfolders", true, ...
     'LabelSource', 'foldernames'); 
 
 [imdsTrain, imdsValandTest] = splitEachLabel(imds, 0.75, 'randomized'); 
-[imdsVal, imdsTest] = splitEachLabel(imds, 0.60, 'randomized'); 
+[imdsVal, imdsTest] = splitEachLabel(imdsValandTest, 0.60, 'randomized'); 
 
 %% visualization
 % figure; 
@@ -55,15 +55,15 @@ layers = [
     classificationLayer('Name', 'classoutput')
 ];
 
-analyzeNetwork(layers);
+% analyzeNetwork(layers);
 %% train
 options = trainingOptions('adam', ...
-    'InitialLearnRate',1e-4, ...
-    'MaxEpochs',50, ...
+    'InitialLearnRate',1e-3, ...
+    'MaxEpochs',30, ...
     'MiniBatchSize', 128, ...           
     'Shuffle','every-epoch', ...       
     'ValidationData',augimdsVal, ...
-    'ValidationFrequency',floor(numel(augimdsTrain.Files)*128), ...
+    'ValidationFrequency', 50, ...
     'Verbose',true, ...
     'Plots','none', ...
     'OutputFcn', @CNN_visualization.plotTrainingProgress); 
@@ -75,11 +75,11 @@ save('CNN_output/training_info_cnn.mat', 'trainInfo');
 
 %% scoring
 [YPred, scores] = classify(net, augimdsTest);
-YVal = imdsTest.Labels;
+YTest = imdsTest.Labels;
 
-accuracy = sum(YPred == YVal) / numel(YVal);
+accuracy = sum(YPred == YTest) / numel(YTest);
 fprintf('Validation accuracy: %.2f%%\n', accuracy * 100);
 
 figure;
-confusionchart(YVal, YPred);
-title('Confusion Matrix for Validation Data');
+confusionchart(YTest, YPred);
+title('Confusion Matrix for Test Set');
