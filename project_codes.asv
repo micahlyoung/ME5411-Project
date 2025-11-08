@@ -70,7 +70,8 @@ imshow(uint8(filtered_image_8x8));
 title("Averaging 8x8 filtered Image");
 
 % Question 3: Creating Sub-image
-[cropped_image, rect] = imcrop(A);
+rect = [27.510000000000000,1.945100000000000e+02,9.449800000000000e+02,1.559800000000000e+02]
+cropped_image = imcrop(A, rect);
 figure;
 imshow(uint8(cropped_image));
 title("Cropped Image")
@@ -80,18 +81,39 @@ title("Cropped Image")
 % We modify the original segmentation function to allow for controllable
 % output
 
-function segment_mask = intensity_slicing_v2(original_image, lower_threshold, upper_threshold, low_output, high_output)
+function segment_mask_v2 = intensity_slicing_v2(original_image, lower_threshold, upper_threshold, low_output, high_output)
     [rows, columns] = size(original_image);
-    segment_mask = zeros(rows, columns); % Initialize the segmentation mask
+    segment_mask_v2 = zeros(rows, columns); % Initialize the segmentation mask
     for i = 1:rows
         for j = 1:columns
             if (lower_threshold < original_image(i, j) && original_image(i, j) < upper_threshold)
-                segment_mask(i, j) = high_output;
+                segment_mask_v2(i, j) = high_output;
             else
-                segment_mask(i, j) = low_output;
+                segment_mask_v2(i, j) = low_output;
             end
         end
     end
 end
 
-thresholded_cropped_image = intensity_slicing_v2(cropped_image, 50, 100, 0, 1);
+% imageGray_cropped = rgb2gray(cropped_image);
+imageGray_cropped_filtered = convolution_filter(cropped_image, 11)
+segment_mask_v2 = intensity_slicing_v2(imageGray_cropped_filtered, 50, 100, 0, 1);
+figure;
+imshow(segment_mask_v2);
+title("Binary Cropped Image");
+
+% Question 5: Creating a set of boundary from the segmentation
+
+% We would be using the bwboundaries function to do so
+[boundaries, labels] = bwboundaries(segment_mask_v2, "holes");
+imshow(label2rgb(labels, @jet, [.5, .5, .5]));
+hold on
+for k = 1:length(boundaries)
+    boundary = boundaries{k};
+    plot(boundary(:, 2), boundary(:, 1), "w", "lineWidth", 2)
+end
+
+% Question 6: Combining all previous methods and experimenting values
+
+final_filtered_image = convolution_filter(cropped_image, 7);
+final_segmented_image = final_filtered_image

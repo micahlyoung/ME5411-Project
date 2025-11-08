@@ -95,8 +95,36 @@ function segment_mask_v2 = intensity_slicing_v2(original_image, lower_threshold,
     end
 end
 
-imageGray_cropped = rgb2gray(cropped_image);
-segment_mask_v2 = intensity_slicing_v2(imageGray_cropped, 50, 100, 0, 1);
+% imageGray_cropped = rgb2gray(cropped_image);
+imageGray_cropped_filtered = convolution_filter(cropped_image, 11)
+segment_mask_v2 = intensity_slicing_v2(imageGray_cropped_filtered, 50, 100, 0, 1);
 figure;
 imshow(segment_mask_v2);
 title("Binary Cropped Image");
+
+% Question 5: Creating a set of boundary from the segmentation
+
+% We would be using the bwboundaries function to do so
+[boundaries, labels] = bwboundaries(segment_mask_v2, "holes");
+imshow(label2rgb(labels, @jet, [.5, .5, .5]));
+hold on
+for k = 1:length(boundaries)
+    boundary = boundaries{k};
+    plot(boundary(:, 2), boundary(:, 1), "w", "lineWidth", 2)
+end
+
+% Question 6: Combining all previous methods and experimenting values
+
+final_filtered_image = convolution_filter(cropped_image, 9);
+final_segmented_image = intensity_slicing_v2(final_filtered_image, 65, 115, 0, 1);
+figure;
+imshow(final_segmented_image);
+title("Final Binary Cropped Image");
+
+[final_boundaries, final_labels] = bwboundaries(final_segmented_image, "holes");
+imshow(label2rgb(final_labels, @jet, [.5, .5, .5]));
+hold on
+for k = 1:length(final_boundaries)
+    final_boundary = final_boundaries{k};
+    plot(final_boundary(:, 2), final_boundary(:, 1), "w", "lineWidth", 2)
+end
