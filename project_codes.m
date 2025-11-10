@@ -41,6 +41,7 @@ imshow(uint8(segment_mask));
 % Histogram Equalization using Matlab's histeq() function
 J = histeq(imageGray);
 
+%%
 % Question 2 of Project
 
 function filtered_image = convolution_filter(original_image, kernel_size)
@@ -69,6 +70,7 @@ figure;
 imshow(uint8(filtered_image_8x8));
 title("Averaging 8x8 filtered Image");
 
+%%
 % Question 3: Creating Sub-image
 rect = [27.510000000000000,1.945100000000000e+02,9.449800000000000e+02,1.559800000000000e+02]
 cropped_image = imcrop(A, rect);
@@ -76,6 +78,7 @@ figure;
 imshow(uint8(cropped_image));
 title("Cropped Image")
 
+%%
 % Question 4: Creating a binary image from the sub-image
 
 % We modify the original segmentation function to allow for controllable
@@ -98,10 +101,13 @@ end
 % imageGray_cropped = rgb2gray(cropped_image);
 imageGray_cropped_filtered = convolution_filter(cropped_image, 11)
 segment_mask_v2 = intensity_slicing_v2(imageGray_cropped_filtered, 50, 100, 0, 1);
+
+
 figure;
 imshow(segment_mask_v2);
 title("Binary Cropped Image");
 
+%%
 % Question 5: Creating a set of boundary from the segmentation
 
 % We would be using the bwboundaries function to do so
@@ -113,6 +119,7 @@ for k = 1:length(boundaries)
     plot(boundary(:, 2), boundary(:, 1), "w", "lineWidth", 2)
 end
 
+%%
 % Question 6: Combining all previous methods and experimenting values
 
 final_filtered_image = convolution_filter(cropped_image, 9);
@@ -128,3 +135,66 @@ for k = 1:length(final_boundaries)
     final_boundary = final_boundaries{k};
     plot(final_boundary(:, 2), final_boundary(:, 1), "w", "lineWidth", 2)
 end
+
+
+%% 
+% Question 6: Splitting all the char images
+BW = final_segmented_image;           
+if mean(BW(:)) > 0.5
+    BW = ~BW;                         
+end
+
+% denoise
+BW = imclearborder(BW);
+BW = bwareaopen(BW, 200);
+% fill holes inside characters
+BW_filled = imfill(BW, 'holes');
+
+% connected components and region properties
+CC    = bwconncomp(BW_filled);
+stats = regionprops(CC, 'BoundingBox', 'Area', 'Solidity', 'Centroid');
+
+
+
+widths = arrayfun(@(s) s.BoundingBox(3), stats);
+heights = arrayfun(@(s) s.BoundingBox(4), stats);
+avg_width = median(widths);
+avg_height = median(heights);
+bboxes = [];
+for i = 1:length(stats)
+    bb = stats(i).BoundingBox;
+    w = bb(3);
+    h = bb(4);
+    % if a box is much wider than average, it may contain multiple characters
+    if w > 1.5 * avg_width
+        n_split = round(w / avg_width);
+        split_width = w / n_split;
+        % then, split this larger box horizontally
+        for k = 0:n_split-1
+            new_bb = [bb(1) + k * split_width, bb(2), split_width, h];
+            bboxes = [bboxes; new_bb];
+        end
+    else
+        bboxes = [bboxes; bb];
+    end
+end
+
+[~, order] = sort(bboxes(:,1));
+bboxes = bboxes(order,:);
+
+figure; imshow(BW); title('Character mask');
+hold on;
+for i = 1:size(bboxes,1)
+    rectangle('Position', bboxes(i,:), 'EdgeColor','r', 'LineWidth',1.5);
+end
+hold off;
+
+output_folder = './segmentation_output/';
+if ~exist(output_folder, 'dir'); mkdir(output_folder); end
+
+for i = 1:size(bboxes,1)
+    bb = bboxes(i,:);
+    char_rgb = imcrop(BW, bb);
+    imwrite(char_rgb, fullfile(output_folder, sprintf('char_%02d.png', i)));
+end
+
