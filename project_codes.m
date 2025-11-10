@@ -195,6 +195,7 @@ if ~exist(output_folder, 'dir'); mkdir(output_folder); end
 for i = 1:size(bboxes,1)
     bb = bboxes(i,:);
     char_rgb = imcrop(BW, bb);
+    char_rgb = imcomplement(char_rgb); 
     imwrite(char_rgb, fullfile(output_folder, sprintf('char_%02d.png', i)));
 end
 
