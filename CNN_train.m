@@ -10,22 +10,22 @@ imds = imageDatastore(path, "IncludeSubfolders", true, ...
 [imdsVal, imdsTest] = splitEachLabel(imdsValandTest, 0.60, 'randomized'); 
 
 %% visualization
-% figure; 
-% perm = randperm(numel(imds.Files), 20); 
-% for i = 1:20
-%     subplot(4,5,i);
-%     imshow(imds.Files{perm(i)});
-%     title(char(imds.Labels(perm(i)))); 
-%     drawnow;
-% end
+figure; 
+perm = randperm(numel(imds.Files), 20); 
+for i = 1:20
+    subplot(4,5,i);
+    imshow(imds.Files{perm(i)});
+    title(char(imds.Labels(perm(i)))); 
+    drawnow;
+end
 
 %% preprocessing
 inputSize = [32 32 1]; 
 
 imageAugmenter = imageDataAugmenter( ...
     'RandRotation',[-10,10], ...
-    'RandXTranslation',[-3 3], ...
-    'RandYTranslation',[-3 3]);
+    'RandXTranslation',[-10 10], ...
+    'RandYTranslation',[-10 10]);
 
 augimdsTrain = augmentedImageDatastore(inputSize, imdsTrain, ...
     'DataAugmentation', imageAugmenter);
@@ -83,3 +83,5 @@ fprintf('Validation accuracy: %.2f%%\n', accuracy * 100);
 figure;
 confusionchart(YTest, YPred);
 title('Confusion Matrix for Test Set');
+
+
