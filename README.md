@@ -1,8 +1,6 @@
 
 ## ME5411 Project
 
----
-
 #### Files:
 
 | File | Description |
