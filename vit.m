@@ -9,11 +9,13 @@ imds = imageDatastore(dataDir, ...
     'IncludeSubfolders', true, ...
     'LabelSource', 'foldernames');
 
-[imdsTrain, imdsVal] = splitEachLabel(imds, 0.75, 'randomized');
-inputSize = [64 64 3];
+[imdsTrain, imdsValandTest] = splitEachLabel(imds, 0.75, 'randomized');
+[imdsVal, imdsTest] = splitEachLabel(imdsValandTest, 0.60, 'randomized'); 
+inputSize = [32 32 1];
 
-augTrain = augmentedImageDatastore(inputSize, imdsTrain, 'ColorPreprocessing', 'gray2rgb');
-augVal   = augmentedImageDatastore(inputSize, imdsVal, 'ColorPreprocessing', 'gray2rgb');
+augTrain = augmentedImageDatastore(inputSize, imdsTrain);
+augVal   = augmentedImageDatastore(inputSize, imdsVal);
+augTest = augmentedImageDatastore(inputSize, imdsTest);
 numClasses = numel(categories(imds.Labels));
 
 %% ----------------------- CNN-based ViT-like Model -----------------------
@@ -61,8 +63,8 @@ options = trainingOptions('adam', ...
 net = trainNetwork(augTrain, lgraph, options);
 
 %% ----------------------- Evaluate Performance -----------------------
-YPred = classify(net, augVal);
-YTrue = imdsVal.Labels;
+YPred = classify(net, augTest);
+YTrue = imdsTest.Labels;
 acc = mean(YPred == YTrue);
 fprintf('\nValidation Accuracy (CNN-based ViT): %.2f%%\n', acc*100);
 
