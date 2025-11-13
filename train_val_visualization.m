@@ -1,4 +1,4 @@
-classdef CNN_visualization
+classdef train_val_visualization
     methods (Static)
         function stop = plotTrainingProgress(info)
             persistent plotHandles; 
@@ -52,5 +52,3 @@ classdef CNN_visualization
         end
     end
 end
-
-

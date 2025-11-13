@@ -147,14 +147,13 @@ end
 % denoise
 BW = imclearborder(BW);
 BW = bwareaopen(BW, 200);
+imshow(BW);
 % fill holes inside characters
 BW_filled = imfill(BW, 'holes');
 
 % connected components and region properties
 CC    = bwconncomp(BW_filled);
 stats = regionprops(CC, 'BoundingBox', 'Area', 'Solidity', 'Centroid');
-
-
 
 widths = arrayfun(@(s) s.BoundingBox(3), stats);
 heights = arrayfun(@(s) s.BoundingBox(4), stats);
@@ -189,7 +188,7 @@ for i = 1:size(bboxes,1)
 end
 hold off;
 
-output_folder = './segmentation_output/';
+output_folder = './outputs/segmentation_output/';
 if ~exist(output_folder, 'dir'); mkdir(output_folder); end
 
 for i = 1:size(bboxes,1)
@@ -199,3 +198,11 @@ for i = 1:size(bboxes,1)
     imwrite(char_rgb, fullfile(output_folder, sprintf('char_%02d.png', i)));
 end
 
+
+%%
+figure; imshow(imcomplement(BW)); title('Character mask');
+hold on;
+for i = 1:size(bboxes,1)
+    rectangle('Position', bboxes(i,:), 'EdgeColor','r', 'LineWidth',1.5);
+end
+hold off;
